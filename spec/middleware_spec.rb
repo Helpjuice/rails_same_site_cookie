@@ -36,4 +36,23 @@ RSpec.describe RailsSameSiteCookie::Middleware do
 
   end
 
+  context "when custom check is provided" do
+    let(:request) { Rack::MockRequest.new(subject) }
+    before(:each) do
+      RailsSameSiteCookie.configure do |config|
+        config.custom_check = ->(env) { env['HTTP_USER_AGENT'] == 'CustomUserAgent' }
+      end
+    end
+
+    it "adds SameSite=None to cookies when custom check passes" do
+      response = request.post("/some/path", 'HTTP_USER_AGENT' => 'CustomUserAgent')
+      expect(response['Set-Cookie']).to match(/;\s*samesite=none/i)
+    end
+
+    it "does not add SameSite=None when custom check fails" do
+      response = request.post("/some/path", 'HTTP_USER_AGENT' => 'DifferentUserAgent')
+      expect(response['Set-Cookie']).not_to match(/;\s*samesite=none/i)
+    end
+  end
+
 end

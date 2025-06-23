@@ -12,12 +12,13 @@ module RailsSameSiteCookie
     def call(env)
       status, headers, body = @app.call(env)
 
-      regex = RailsSameSiteCookie.configuration.user_agent_regex
+      config = RailsSameSiteCookie.configuration
+      regex = config.user_agent_regex
       set_cookie = headers['Set-Cookie']
       set_cookie_is_array = set_cookie.is_a?(Array)
       if (regex.nil? or regex.match(env['HTTP_USER_AGENT'])) and not (set_cookie.nil? or (set_cookie_is_array ? set_cookie.empty? : set_cookie.strip == ''))
         parser = UserAgentChecker.new(env['HTTP_USER_AGENT'])
-        if parser.send_same_site_none?
+        if parser.send_same_site_none? && config.send_same_site_none?(env)
           cookies = set_cookie_is_array ? set_cookie : set_cookie.split(COOKIE_SEPARATOR)
           ssl = Rack::Request.new(env).ssl?
 

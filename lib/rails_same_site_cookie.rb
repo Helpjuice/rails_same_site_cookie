@@ -16,5 +16,4 @@ module RailsSameSiteCookie
   def self.configure
     yield(configuration)
   end
-
 end
